@@ -4,12 +4,12 @@
 
 | Field | Value |
 |-------|-------|
-| Project | MAD |
+| Project | DOM |
 | Issue Type | Story |
 | Priority | 6 - Undefined |
-| Module | Authentication |
-| Entity | User Session / JWT |
-| Feature Type | crud, validation, integration |
+| Module | authentication |
+| Entity | login |
+| Feature Type | crud, validation |
 | Source References | jiradoc-s.md (user-supplied input) |
 
 ---
@@ -17,133 +17,104 @@
 ## 1. User Story
 
 As an application user,
-I want a login page with email and password authentication,
+I want a responsive login page with email and password authentication,
 So that I can securely authenticate and access protected areas of the application.
 
 ---
 
-## 2. Background
-
-- The application requires a dedicated login route to authenticate users via a REST API.
-- On successful authentication, a JWT token is returned and must be persisted in `localStorage`.
-- The login form must enforce client-side validation before any API call is made.
-- API endpoint: `POST ${REACT_APP_API_BASE_URL}/auth/login`
-  - 200 OK → `{ token }` — store JWT, redirect to `/dashboard`
-  - 401 → `{ message }` — show "Invalid email or password"
-  - 5xx → show generic error message
-- Stack: React 18, TypeScript, Tailwind CSS; libraries: `axios`, `react-router-dom`.
-
----
-
-## 3. Scope
+## 2. Scope
 
 **In Scope:**
-- Login form UI with email and password fields (Tailwind CSS, mobile-responsive)
-- Client-side validation: empty-field check, email format check
-- Login button disabled state when fields are empty; loading spinner during API call
-- `POST /auth/login` via axios; JWT stored in `localStorage` on success
-- Error display: 401 → "Invalid email or password"; 5xx → generic error
-- Redirect to `/dashboard` on success via `useNavigate`
-- Accessible labels and keyboard navigation
+- Login form UI with email and password fields (React 18 + TypeScript + Tailwind CSS)
+- Client-side validation: empty-field check and email format check
+- API integration: `POST /auth/login` via axios; JWT stored in `localStorage` on success
+- Error handling: 401 "Invalid email or password", generic message on 5xx
+- Post-login redirect to `/dashboard` via `useNavigate`
+- Mobile-responsive layout with accessible labels and keyboard navigation
 
 **Out of Scope:**
-- Server-side session management or refresh-token logic
-- Registration, forgot-password, or SSO flows
-- Backend API implementation
+- Registration, password reset, or social login flows
+- Server-side session management or token refresh logic
+- Backend `/auth/login` endpoint implementation
 
 ---
 
-## 4. Acceptance Criteria
-
-### Section A — Form CRUD / Interaction
+## 3. Acceptance Criteria
 
 **AC-A01 — Render Login Form**
-- Given the user navigates to the login route
+- Given the user navigates to the login page
 - When the page loads
-- Then email field, password field, and a login button are rendered with accessible labels
+- Then email and password input fields are rendered with accessible labels and keyboard-navigable focus order
 
-**AC-A02 — Mandatory Field Enforcement**
-- Given one or both fields are empty
+**AC-A02 — Mandatory Field Validation**
+- Given either the email or password field is empty
 - When the user attempts to submit
 - Then the login button remains disabled and no API call is made
 
 **AC-A03 — Email Format Validation**
-- Given the email field contains an invalid format
+- Given the email field contains a value that is not a valid email format
 - When the user attempts to submit
-- Then a validation error is shown and the API call is not triggered
+- Then an inline validation error is shown and the API call is not made
 
-**AC-A04 — Loading State**
-- Given both fields are valid
-- When the login button is clicked
-- Then the button shows a spinner and is disabled for the duration of the API call
+**AC-A04 — Successful Login**
+- Given valid credentials are entered
+- When the form is submitted
+- Then `POST ${REACT_APP_API_BASE_URL}/auth/login` is called, the returned `token` is stored in `localStorage`, and the user is redirected to `/dashboard`
 
-### Section C — Integration / Validation / Defaults
+**AC-A05 — Loading State**
+- Given the form is submitted and the API call is in-flight
+- When the request is pending
+- Then the login button shows a spinner and is disabled to prevent duplicate submissions
 
-**AC-C01 — Successful Login**
-- Given valid credentials are submitted
-- When the API returns 200 OK with `{ token }`
-- Then the JWT is stored in `localStorage` and the user is redirected to `/dashboard`
+**AC-A06 — Error Handling**
+- Given the API returns 401
+- When the response is received
+- Then "Invalid email or password" is displayed to the user
+- And given the API returns a 5xx error, a generic error message is displayed
 
-**AC-C02 — Invalid Credentials (401)**
-- Given credentials are submitted
-- When the API returns 401
-- Then "Invalid email or password" is displayed and no redirect occurs
-
-**AC-C03 — Server Error (5xx)**
-- Given credentials are submitted
-- When the API returns a 5xx response
-- Then a generic error message is displayed and no redirect occurs
-
-**AC-C04 — Mobile Responsive Layout**
+**AC-C01 — Mobile-Responsive Layout**
 - Given the user accesses the login page on a mobile viewport
 - When the page renders
-- Then the layout adapts correctly using Tailwind responsive utilities
-
-**AC-C05 — Keyboard Navigation**
-- Given the login form is rendered
-- When the user navigates using the keyboard (Tab, Enter)
-- Then all interactive elements are reachable and operable
+- Then the layout adapts correctly using Tailwind CSS responsive utilities
 
 ---
 
-## 5. Technical Notes
+## 4. Technical Notes
 
-- **Component state:** `email`, `password`, `isLoading`, `error` via `useState`
-- **API call:** `axios.post(`${process.env.REACT_APP_API_BASE_URL}/auth/login`, { email, password })`
-- **JWT storage:** `localStorage.setItem('token', response.data.token)`
-- **Routing:** `useNavigate()` from `react-router-dom` for redirect to `/dashboard`
-- **Validation:** inline before axios call; disable submit button when `!email || !password`
-- **Error handling:** catch block checks `error.response?.status`; 401 → specific message, else generic
-- **Accessibility:** `<label htmlFor>` paired with inputs; `aria-busy` on button during loading
+- **Stack:** React 18, TypeScript, Tailwind CSS
+- **Libraries:** `axios`, `react-router-dom`
+- **API:** `POST ${REACT_APP_API_BASE_URL}/auth/login`
+  - 200 OK → `{ token: string }` — store in `localStorage`
+  - 401 → `{ message: string }` — display "Invalid email or password"
+  - 5xx → display generic error message
+- **State:** `email`, `password`, `isLoading`, `error` managed via `useState`
+- **Navigation:** `useNavigate` from `react-router-dom` for post-login redirect to `/dashboard`
+- **Token storage:** `localStorage.setItem('token', token)` on success
 
 ---
 
-## 6. Dependencies
+## 5. Dependencies
 
 | Dependency | Module / Package | Type | Notes |
 |------------|-----------------|------|-------|
 | axios | HTTP client | Required | API calls to `/auth/login` |
 | react-router-dom | Routing | Required | `useNavigate` for redirect |
 | Tailwind CSS | Styling | Required | Responsive layout utilities |
-| REACT_APP_API_BASE_URL | Env config | Required | Base URL for API endpoint |
+| `REACT_APP_API_BASE_URL` | Environment config | Required | Base URL for API endpoint |
 
 ---
 
-## 7. Attachments
+## 6. Attachments
 
 | Document | File |
 |----------|------|
-| Design Document | MAD-XXXX_design_document.png |
-| Task List | MAD-XXXX_task_list.png |
+| Design Document | TICKET-ID_design_document.png |
+| Task List | TICKET-ID_task_list.png |
 
-*(Attachment files to be generated and uploaded after ticket creation.)*
+*(Replace `TICKET-ID` with the assigned Jira key after creation.)*
 
 ---
 
-## 8. Clarifications
+## 7. Labels
 
-### AC-A02 / AC-A03 — Client-Side vs Server-Side Validation
-Client-side validation (empty check, email format) is a UX guard only. Server-side validation on the API is out of scope for this ticket. The disabled-button state is the primary enforcement mechanism before the API call.
-
-### AC-C01 — JWT Storage Choice
-`localStorage` is specified in the input. If the team later decides to use `httpOnly` cookies for security, that would be a separate ticket.
+`ai-created`, `authentication`, `validation`, `login`
