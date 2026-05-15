@@ -5,10 +5,10 @@ node_modules/
 .env
 .env.*
 
-# MCP config files (contain API tokens and secrets)
-.cursor/mcp.json
-.kiro/settings/mcp.json
-.kiro/settings/mcp-bundles/
+# MCP / editor config (contain API tokens and secrets)
+.cursor/*
+!.cursor/mcp.json.example
+.kiro/
 
 # Build output
 build/

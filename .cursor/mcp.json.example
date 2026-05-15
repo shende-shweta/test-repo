@@ -1,0 +1,54 @@
+{
+  "mcpServers": {
+    "jira": {
+      "command": "node",
+      "args": [
+        "/path/to/repo/.kiro/settings/mcp-bundles/node_modules/@aashari/mcp-server-atlassian-jira/dist/index.js"
+      ],
+      "env": {
+        "ATLASSIAN_SITE_NAME": "your-site-name",
+        "ATLASSIAN_USER_EMAIL": "you@example.com",
+        "ATLASSIAN_API_TOKEN": "your-atlassian-api-token",
+        "JIRA_PROJECT_KEY": "MAD"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "jira_get",
+        "jira_post",
+        "jira_put",
+        "jira_patch",
+        "jira_delete"
+      ]
+    },
+    "github": {
+      "command": "node",
+      "args": [
+        "/path/to/repo/.kiro/settings/mcp-bundles/node_modules/@modelcontextprotocol/server-github/dist/index.js"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "your-github-pat"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "create_or_update_file",
+        "push_files",
+        "create_pull_request",
+        "create_branch",
+        "get_file_contents",
+        "list_commits",
+        "get_pull_request",
+        "list_pull_requests",
+        "merge_pull_request"
+      ],
+      "disabledTools": [
+        "create_repository",
+        "create_issue",
+        "fork_repository",
+        "list_issues",
+        "update_issue",
+        "add_issue_comment",
+        "search_issues"
+      ]
+    }
+  }
+}
