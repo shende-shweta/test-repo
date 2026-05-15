@@ -1,3 +1,15 @@
+# Dependencies
 node_modules/
+
+# Environment variables (contain secrets)
 .env
-.kiro/
+.env.*
+
+# MCP config files (contain API tokens and secrets)
+.cursor/mcp.json
+.kiro/settings/mcp.json
+.kiro/settings/mcp-bundles/
+
+# Build output
+build/
+dist/
