@@ -69,6 +69,16 @@ describe('LoginPage', () => {
     });
   });
 
+  describe('AC-A02 — whitespace-only inputs treated as empty', () => {
+    it('should keep the submit button disabled when fields contain only whitespace', async () => {
+      renderLoginPage();
+      await userEvent.type(screen.getByLabelText(/email address/i), '   ');
+      await userEvent.type(screen.getByLabelText(/password/i), '   ');
+
+      expect(screen.getByRole('button', { name: /sign in/i })).toBeDisabled();
+    });
+  });
+
   describe('AC-A03 — email format validation', () => {
     it('should show a validation error and not call the API when email format is invalid', async () => {
       renderLoginPage();
@@ -77,7 +87,23 @@ describe('LoginPage', () => {
       await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
 
       expect(screen.getByText(/please enter a valid email address/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/email address/i)).toHaveAttribute('aria-invalid', 'true');
       expect(mockLogin).not.toHaveBeenCalled();
+    });
+
+    it('should clear the email validation error when the user corrects the email', async () => {
+      renderLoginPage();
+      await userEvent.type(screen.getByLabelText(/email address/i), 'bad');
+      await userEvent.type(screen.getByLabelText(/password/i), 'secret');
+      await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
+      expect(screen.getByText(/please enter a valid email address/i)).toBeInTheDocument();
+
+      // Correcting the email clears the inline error on change
+      await userEvent.clear(screen.getByLabelText(/email address/i));
+      await userEvent.type(screen.getByLabelText(/email address/i), 'good@example.com');
+
+      expect(screen.queryByText(/please enter a valid email address/i)).not.toBeInTheDocument();
+      expect(screen.getByLabelText(/email address/i)).toHaveAttribute('aria-invalid', 'false');
     });
   });
 

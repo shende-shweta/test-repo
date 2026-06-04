@@ -1,0 +1,25 @@
+/* Design tokens — KAN-14 */
+:root {
+  --background: #ffffff;
+  --card: #ffffff;
+  --primary: #030213;
+  --primary-foreground: oklch(1 0 0);
+  --input-background: #f3f3f5;
+  --border: rgba(0, 0, 0, 0.1);
+  --ring: oklch(0.708 0 0);
+  --radius: 0.625rem;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+}
+
+.dark {
+  --background: #0f0f13;
+  --card: #1a1a24;
+  --primary: #e8e8f0;
+  --primary-foreground: #030213;
+  --input-background: #25252f;
+  --border: rgba(255, 255, 255, 0.1);
+  --ring: oklch(0.6 0 0);
+  --destructive: #f87171;
+  --destructive-foreground: #0f0f13;
+}

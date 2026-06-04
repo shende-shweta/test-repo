@@ -31,4 +31,16 @@ describe('login', () => {
 
     await expect(login(CREDENTIALS)).rejects.toThrow('Network Error');
   });
+
+  it('should build the URL from REACT_APP_API_BASE_URL env variable', async () => {
+    process.env.REACT_APP_API_BASE_URL = 'https://other.example.com';
+    mockedAxios.post.mockResolvedValueOnce({ data: { token: TOKEN } });
+
+    await login(CREDENTIALS);
+
+    expect(mockedAxios.post).toHaveBeenCalledWith(
+      'https://other.example.com/auth/login',
+      CREDENTIALS
+    );
+  });
 });
