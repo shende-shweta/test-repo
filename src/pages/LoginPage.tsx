@@ -47,20 +47,23 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-md p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6 text-center">Sign in</h1>
+    <main className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="w-full max-w-md bg-card rounded-lg shadow-lg border border-border p-8">
+        <h1 className="text-2xl font-medium text-center mb-6">Login</h1>
 
         {error && (
-          <div role="alert" className="mb-4 rounded-lg bg-red-50 border border-red-300 px-4 py-3 text-sm text-red-700">
+          <div
+            role="alert"
+            className="mb-4 rounded-lg border border-border bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          >
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} noValidate>
-          {/* Email */}
+          {/* Email / Username */}
           <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium mb-1">
               Email address
             </label>
             <input
@@ -69,16 +72,17 @@ const LoginPage: React.FC = () => {
               autoComplete="email"
               value={email}
               onChange={(e) => { setEmail(e.target.value); setEmailError(null); }}
+              required
               aria-required="true"
               aria-describedby={emailError ? 'email-error' : undefined}
               aria-invalid={emailError ? 'true' : 'false'}
-              className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                emailError ? 'border-red-400' : 'border-gray-300'
+              className={`w-full rounded-lg border px-3 py-2 text-sm bg-input-background focus:outline-none focus:ring-2 focus:ring-ring ${
+                emailError ? 'border-destructive' : 'border-border'
               }`}
               placeholder="you@example.com"
             />
             {emailError && (
-              <p id="email-error" role="alert" className="mt-1 text-xs text-red-600">
+              <p id="email-error" role="alert" className="mt-1 text-xs text-destructive">
                 {emailError}
               </p>
             )}
@@ -86,17 +90,18 @@ const LoginPage: React.FC = () => {
 
           {/* Password */}
           <div className="mb-6">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="password" className="block text-sm font-medium mb-1">
               Password
             </label>
             <input
               id="password"
               type="password"
               autoComplete="current-password"
+              required
               aria-required="true"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm bg-input-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -105,11 +110,11 @@ const LoginPage: React.FC = () => {
             type="submit"
             disabled={!isFormValid || isLoading}
             aria-busy={isLoading}
-            className="w-full flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
           >
             {isLoading && (
               <svg
-                className="animate-spin h-4 w-4 text-white"
+                className="animate-spin h-4 w-4"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
