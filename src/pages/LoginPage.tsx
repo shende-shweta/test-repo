@@ -12,6 +12,7 @@ const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   const isFormValid = email.trim() !== '' && password.trim() !== '';
 
@@ -20,7 +21,18 @@ const LoginPage: React.FC = () => {
       setEmailError('Please enter a valid email address.');
       return false;
     }
+
     setEmailError(null);
+    return true;
+  };
+
+  const validatePassword = (value: string): boolean => {
+    if (value.trim() === '') {
+      setPasswordError('Please enter your password.');
+      return false;
+    }
+
+    setPasswordError(null);
     return true;
   };
 
@@ -28,7 +40,10 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     setError(null);
 
-    if (!validateEmail(email)) return;
+    const isEmailValid = validateEmail(email);
+    const isPasswordValid = validatePassword(password);
+
+    if (!isEmailValid || !isPasswordValid) return;
 
     setIsLoading(true);
     try {
@@ -58,7 +73,6 @@ const LoginPage: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit} noValidate>
-          {/* Email */}
           <div className="mb-4">
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               Email address
@@ -68,7 +82,10 @@ const LoginPage: React.FC = () => {
               type="email"
               autoComplete="email"
               value={email}
-              onChange={(e) => { setEmail(e.target.value); setEmailError(null); }}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setEmailError(null);
+              }}
               aria-required="true"
               aria-describedby={emailError ? 'email-error' : undefined}
               aria-invalid={emailError ? 'true' : 'false'}
@@ -84,7 +101,6 @@ const LoginPage: React.FC = () => {
             )}
           </div>
 
-          {/* Password */}
           <div className="mb-6">
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
               Password
@@ -94,13 +110,24 @@ const LoginPage: React.FC = () => {
               type="password"
               autoComplete="current-password"
               aria-required="true"
+              aria-describedby={passwordError ? 'password-error' : undefined}
+              aria-invalid={passwordError ? 'true' : 'false'}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setPasswordError(null);
+              }}
+              className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                passwordError ? 'border-red-400' : 'border-gray-300'
+              }`}
             />
+            {passwordError && (
+              <p id="password-error" role="alert" className="mt-1 text-xs text-red-600">
+                {passwordError}
+              </p>
+            )}
           </div>
 
-          {/* Submit */}
           <button
             type="submit"
             disabled={!isFormValid || isLoading}
