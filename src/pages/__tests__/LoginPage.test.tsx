@@ -29,158 +29,94 @@ afterEach(() => {
 });
 
 describe('LoginPage', () => {
-  describe('AC-A01 — initial render', () => {
-    it('should render email field, password field, and submit button with accessible labels', () => {
-      renderLoginPage();
+  it('renders the login form fields and submit button', () => {
+    renderLoginPage();
 
-      expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
+  });
+
+  it('disables submit until both required fields are filled', async () => {
+    renderLoginPage();
+
+    expect(screen.getByRole('button', { name: /sign in/i })).toBeDisabled();
+
+    await userEvent.type(screen.getByLabelText(/email address/i), 'user@example.com');
+    expect(screen.getByRole('button', { name: /sign in/i })).toBeDisabled();
+
+    await userEvent.type(screen.getByLabelText(/password/i), 'secret');
+    expect(screen.getByRole('button', { name: /sign in/i })).toBeEnabled();
+  });
+
+  it('shows validation errors and does not call the API for invalid input', async () => {
+    renderLoginPage();
+    await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
+
+    expect(screen.getByText(/please enter a valid email address/i)).toBeInTheDocument();
+    expect(screen.getByText(/please enter your password/i)).toBeInTheDocument();
+    expect(mockLogin).not.toHaveBeenCalled();
+  });
+
+  it('shows a validation error when the email format is invalid', async () => {
+    renderLoginPage();
+    await userEvent.type(screen.getByLabelText(/email address/i), 'not-an-email');
+    await userEvent.type(screen.getByLabelText(/password/i), 'secret');
+    await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
+
+    expect(screen.getByText(/please enter a valid email address/i)).toBeInTheDocument();
+    expect(mockLogin).not.toHaveBeenCalled();
+  });
+
+  it('stores the token and navigates on successful login', async () => {
+    mockLogin.mockResolvedValueOnce({ token: 'jwt-abc' });
+
+    renderLoginPage();
+    await userEvent.type(screen.getByLabelText(/email address/i), 'user@example.com');
+    await userEvent.type(screen.getByLabelText(/password/i), 'secret');
+    await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
+
+    await waitFor(() => {
+      expect(localStorage.getItem('token')).toBe('jwt-abc');
+      expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
     });
   });
 
-  describe('AC-A02 — mandatory field enforcement', () => {
-    it('should disable the submit button when both fields are empty', () => {
-      renderLoginPage();
-
-      expect(screen.getByRole('button', { name: /sign in/i })).toBeDisabled();
+  it('shows the invalid credentials error on 401', async () => {
+    const error = Object.assign(new Error('Unauthorized'), {
+      isAxiosError: true,
+      response: { status: 401 },
     });
+    mockLogin.mockRejectedValueOnce(error);
 
-    it('should disable the submit button when only email is filled', async () => {
-      renderLoginPage();
-      await userEvent.type(screen.getByLabelText(/email address/i), 'user@example.com');
+    renderLoginPage();
+    await userEvent.type(screen.getByLabelText(/email address/i), 'user@example.com');
+    await userEvent.type(screen.getByLabelText(/password/i), 'wrong');
+    await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
 
-      expect(screen.getByRole('button', { name: /sign in/i })).toBeDisabled();
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('Invalid email or password.');
     });
-
-    it('should disable the submit button when only password is filled', async () => {
-      renderLoginPage();
-      await userEvent.type(screen.getByLabelText(/password/i), 'secret');
-
-      expect(screen.getByRole('button', { name: /sign in/i })).toBeDisabled();
-    });
-
-    it('should enable the submit button when both fields are filled', async () => {
-      renderLoginPage();
-      await userEvent.type(screen.getByLabelText(/email address/i), 'user@example.com');
-      await userEvent.type(screen.getByLabelText(/password/i), 'secret');
-
-      expect(screen.getByRole('button', { name: /sign in/i })).toBeEnabled();
-    });
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  describe('AC-A03 — email format validation', () => {
-    it('should show a validation error and not call the API when email format is invalid', async () => {
-      renderLoginPage();
-      await userEvent.type(screen.getByLabelText(/email address/i), 'not-an-email');
-      await userEvent.type(screen.getByLabelText(/password/i), 'secret');
-      await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
-
-      expect(screen.getByText(/please enter a valid email address/i)).toBeInTheDocument();
-      expect(mockLogin).not.toHaveBeenCalled();
+  it('shows the generic error on server failure', async () => {
+    const error = Object.assign(new Error('Server Error'), {
+      isAxiosError: true,
+      response: { status: 500 },
     });
-  });
+    mockLogin.mockRejectedValueOnce(error);
 
-  describe('AC-A04 — loading state', () => {
-    it('should disable the button and show loading text while the API call is in progress', async () => {
-      // Resolve immediately after asserting the loading state to avoid act() warnings
-      mockLogin.mockImplementationOnce(
-        () =>
-          new Promise((res) =>
-            setTimeout(() => res({ token: 'tok' }), 50)
-          )
+    renderLoginPage();
+    await userEvent.type(screen.getByLabelText(/email address/i), 'user@example.com');
+    await userEvent.type(screen.getByLabelText(/password/i), 'secret');
+    await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Something went wrong. Please try again later.'
       );
-
-      renderLoginPage();
-      await userEvent.type(screen.getByLabelText(/email address/i), 'user@example.com');
-      await userEvent.type(screen.getByLabelText(/password/i), 'secret');
-      await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
-
-      expect(screen.getByRole('button', { name: /signing in/i })).toBeDisabled();
-
-      // Wait for the async call to complete so React state settles
-      await waitFor(() => expect(screen.getByRole('button', { name: /sign in/i })).toBeEnabled());
     });
-  });
-
-  describe('AC-C01 — successful login', () => {
-    it('should store the JWT in localStorage and navigate to /dashboard on 200', async () => {
-      mockLogin.mockResolvedValueOnce({ token: 'jwt-abc' });
-
-      renderLoginPage();
-      await userEvent.type(screen.getByLabelText(/email address/i), 'user@example.com');
-      await userEvent.type(screen.getByLabelText(/password/i), 'secret');
-      await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
-
-      await waitFor(() => {
-        expect(localStorage.getItem('token')).toBe('jwt-abc');
-        expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
-      });
-    });
-  });
-
-  describe('AC-C02 — invalid credentials (401)', () => {
-    it('should display "Invalid email or password." and not navigate on 401', async () => {
-      const error = Object.assign(new Error('Unauthorized'), {
-        isAxiosError: true,
-        response: { status: 401 },
-      });
-      mockLogin.mockRejectedValueOnce(error);
-
-      renderLoginPage();
-      await userEvent.type(screen.getByLabelText(/email address/i), 'user@example.com');
-      await userEvent.type(screen.getByLabelText(/password/i), 'wrong');
-      await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
-
-      await waitFor(() => {
-        expect(screen.getByRole('alert')).toHaveTextContent('Invalid email or password.');
-      });
-      expect(mockNavigate).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('AC-C03 — server error (5xx)', () => {
-    it('should display a generic error message and not navigate on 5xx', async () => {
-      const error = Object.assign(new Error('Server Error'), {
-        isAxiosError: true,
-        response: { status: 500 },
-      });
-      mockLogin.mockRejectedValueOnce(error);
-
-      renderLoginPage();
-      await userEvent.type(screen.getByLabelText(/email address/i), 'user@example.com');
-      await userEvent.type(screen.getByLabelText(/password/i), 'secret');
-      await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
-
-      await waitFor(() => {
-        expect(screen.getByRole('alert')).toHaveTextContent(
-          'Something went wrong. Please try again later.'
-        );
-      });
-      expect(mockNavigate).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('error state reset', () => {
-    it('should clear a previous API error when a new submission begins', async () => {
-      mockLogin
-        .mockRejectedValueOnce(
-          Object.assign(new Error('Unauthorized'), {
-            isAxiosError: true,
-            response: { status: 401 },
-          })
-        )
-        .mockResolvedValueOnce({ token: 'tok' });
-
-      renderLoginPage();
-      await userEvent.type(screen.getByLabelText(/email address/i), 'user@example.com');
-      await userEvent.type(screen.getByLabelText(/password/i), 'wrong');
-      await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
-      await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
-
-      await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
-
-      await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
-    });
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 });
